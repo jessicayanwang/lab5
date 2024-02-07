@@ -260,18 +260,17 @@ library(tidyverse)
 ``` r
 station_median_temp <- met_dt |>
  group_by(USAFID) |>
-  summarize(temp = median(temp, na.rm=TRUE), state = first(STATE)
+  summarize(temp = median(temp, na.rm=TRUE), STATE = first(STATE), LAT = first(LAT), LON = first(LON)
   ) |> filter(!is.na(temp)) 
 
 station_median_wind <- met_dt |>
  group_by(USAFID) |>
-  summarize(wind.sp = median(wind.sp, na.rm=TRUE), state = first(STATE)
+  summarize(wind.sp = median(wind.sp, na.rm=TRUE), STATE = first(STATE), LAT = first(LAT), LON = first(LON)
   ) |> filter(!is.na(wind.sp))
 
 station_median_atm <- met_dt |>
  group_by(USAFID) |>
-  summarize(atm.press = median(atm.press, na.rm=TRUE), state = first(STATE)
-  ) |> filter(!is.na(atm.press))
+  summarize(atm.press = median(atm.press, na.rm=TRUE), STATE = first(STATE), LAT = first(LAT), LON = first(LON)) |> filter(!is.na(atm.press))
 
 stations_temp <-station_median_temp[station_median_temp$temp==state_median_temp, "USAFID"]
 stations_wind <- station_median_wind[station_median_wind$wind.sp==state_median_wind,"USAFID"]
@@ -304,9 +303,9 @@ station_median_temp$distance = sqrt((station_median_temp$temp - state_median_tem
 
 ``` r
 closest <- station_median_temp %>% 
-   group_by(state) %>% 
+   group_by(STATE) %>% 
    filter(distance == min(distance)) %>%
-  select(USAFID, state, distance)
+  select(USAFID, STATE, distance, LAT, LON)
 ```
 
 Knit the doc and save it on GitHub.
@@ -318,6 +317,37 @@ mid-point (median) of the state. Combining these with the stations you
 identified in the previous question, use `leaflet()` to visualize all
 ~100 points in the same figure, applying different colors for the
 geographic median and the temperature and wind speed median.
+
+``` r
+state_median_lat = quantile(met_dt$LAT, 0.5, na.rm=TRUE)
+state_median_lon = quantile(met_dt$LAT, 0.5, na.rm=TRUE)
+stations_lat_lon = met_dt %>% select(USAFID, LAT, LON, STATE)
+stations_lat_lon = distinct(stations_lat_lon)
+stations_lat_lon$distance = sqrt((stations_lat_lon$LAT - state_median_lat)^2 + (stations_lat_lon$LON - state_median_lon)^2)
+closest2 <- stations_lat_lon %>% 
+   group_by(STATE) %>% 
+   filter(distance == min(distance)) %>%
+  select(USAFID, STATE, distance, LAT, LON)
+```
+
+``` r
+install.packages("webshot")
+webshot::install_phantomjs()
+```
+
+``` r
+leaflet() %>%
+  addProviderTiles('CartoDB.Positron') %>% 
+  addCircles(
+ data = closest,
+ lat = ~LAT, lng = ~LON, opacity = 1, fillOpacity = 1, radius = 400, color = "blue"
+ ) %>%
+ addCircles(
+ data = closest2,
+ lat = ~LAT, lng = ~LON, opacity=1, fillOpacity=1, radius = 1400, color = "red")
+```
+
+![](README_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
 
 Knit the doc and save it on GitHub.
 
