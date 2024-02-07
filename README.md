@@ -363,6 +363,70 @@ Use the following breakdown for elevation:
 - Mid: elev \>= 93 and elev \< 401
 - High: elev \>= 401
 
+``` r
+met_elev <- met_dt %>% mutate(elevation_category = ifelse(elev < 93, "Low",
+                                ifelse(elev >= 93 & elev < 401, "Mid", "High")))
+met_elev <- met_elev %>%
+  group_by(STATE, elevation_category) %>%
+  summarise(avg_temp = mean(temp, na.rm = TRUE), .groups = 'drop')
+
+met_elev <- met_elev %>%
+  pivot_wider(names_from = elevation_category, values_from = avg_temp)
+
+kable(met_elev)
+```
+
+| STATE |      Low |      Mid |      High |
+|:------|---------:|---------:|----------:|
+| AL    | 25.07106 | 23.79775 |        NA |
+| AR    | 25.58698 | 24.40578 | 23.723926 |
+| AZ    | 29.28585 | 30.38057 | 23.892609 |
+| CA    | 18.25508 | 18.77071 | 18.148808 |
+| CO    |       NA |       NA | 15.184075 |
+| CT    | 19.37249 | 18.78433 |        NA |
+| DE    | 21.40611 |       NA |        NA |
+| FL    | 26.61484 |       NA |        NA |
+| GA    | 24.80529 | 23.23841 |        NA |
+| IA    |       NA | 22.26228 | 21.992787 |
+| ID    |       NA |       NA | 16.415667 |
+| IL    |       NA | 22.11707 | 20.843173 |
+| IN    |       NA | 20.12731 |        NA |
+| KS    |       NA | 24.16196 | 22.098776 |
+| KY    |       NA | 21.36103 | 20.178196 |
+| LA    | 27.61819 | 26.09414 |        NA |
+| MA    | 17.44477 | 17.59058 |        NA |
+| MD    | 21.25462 | 20.62255 | 20.648332 |
+| ME    | 15.23159 | 15.43930 | 15.329681 |
+| MI    |       NA | 18.54432 | 17.977982 |
+| MN    | 22.66275 | 21.15523 | 19.931963 |
+| MO    | 25.79654 | 23.77652 | 23.300286 |
+| MS    | 26.34285 | 24.66682 |        NA |
+| MT    |       NA |       NA | 16.293015 |
+| NC    | 22.82945 | 21.21073 | 18.046833 |
+| ND    |       NA | 21.79236 | 20.415848 |
+| NE    |       NA | 23.48598 | 21.048920 |
+| NH    | 17.78844 | 16.77731 |  7.243417 |
+| NJ    | 19.96563 | 19.31963 |        NA |
+| NM    |       NA |       NA | 22.448418 |
+| NV    |       NA |       NA | 20.849170 |
+| NY    | 18.75621 | 18.31489 | 15.887585 |
+| OH    |       NA | 19.43774 |        NA |
+| OK    |       NA | 25.07676 | 24.000040 |
+| OR    | 15.20318 | 16.39100 | 16.711553 |
+| PA    | 20.34185 | 19.40527 | 17.286934 |
+| RI    | 17.88116 | 17.46589 |        NA |
+| SC    | 23.68407 | 22.38995 |        NA |
+| SD    |       NA | 22.79495 | 20.639922 |
+| TN    | 25.81362 | 22.89642 | 19.457179 |
+| TX    | 28.74462 | 28.08021 | 26.500393 |
+| UT    |       NA |       NA | 19.754720 |
+| VA    | 21.34826 | 20.49998 | 17.954522 |
+| VT    |      NaN | 16.89971 |        NA |
+| WA    | 15.25193 | 17.80542 | 16.810354 |
+| WI    |       NA | 19.56563 | 17.994615 |
+| WV    |       NA | 19.31079 | 17.492150 |
+| WY    |       NA |       NA | 13.748173 |
+
 Knit the document, commit your changes, and push them to GitHub.
 
 ## Question 5: Advanced Regression

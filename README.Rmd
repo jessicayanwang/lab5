@@ -255,7 +255,16 @@ Use the following breakdown for elevation:
 - High: elev >= 401
 
 ```{r}
+met_elev <- met_dt %>% mutate(elevation_category = ifelse(elev < 93, "Low",
+                                ifelse(elev >= 93 & elev < 401, "Mid", "High")))
+met_elev <- met_elev %>%
+  group_by(STATE, elevation_category) %>%
+  summarise(avg_temp = mean(temp, na.rm = TRUE), .groups = 'drop')
 
+met_elev <- met_elev %>%
+  pivot_wider(names_from = elevation_category, values_from = avg_temp)
+
+kable(met_elev)
 ```
 
 
