@@ -90,7 +90,7 @@ Once you are done setting up the project, you can now start working with the MET
 
 1. Load the `data.table` (and the `dtplyr` and `dplyr` packages), `mgcv`, `ggplot2`, `leaflet`, `kableExtra`.
 
-```{r packages warnings=FALSE}
+```{r "packages warnings"=FALSE}
 library(data.table)
 library(dtplyr)
 library(dplyr)
@@ -101,7 +101,7 @@ library(kableExtra)
 ```
 
 
-```{r, eval=FALSE}
+```{r}
 fn <- "https://raw.githubusercontent.com/JSC370/JSC370-2024/main/data/met_all_2023.gz"
 if (!file.exists("met_all_2023.gz"))
   download.file(fn, destfile = "met_all_2023.gz")
@@ -110,7 +110,7 @@ met <- data.table::fread("met_all_2023.gz")
 
 2. Load the met data from https://github.com/JSC370/JSC370-2024/main/data/met_all_2023.gz or  (Use https://raw.githubusercontent.com/JSC370/JSC370-2024/main/data/met_all_2023.gz to download programmatically), and also the station data. For the latter, you can use the code we used during lecture to pre-process the stations data:
 
-```{r stations-data, eval = FALSE}
+```{r stations-data}
 # Download the data
 stations <- fread("ftp://ftp.ncdc.noaa.gov/pub/data/noaa/isd-history.csv")
 stations[, USAF := as.integer(USAF)]
@@ -171,17 +171,17 @@ Next identify the stations have these median values.
 library(tidyverse)
 station_median_temp <- met_dt |>
  group_by(USAFID) |>
-  summarize(temp = median(temp, na.rm=TRUE)
-  ) |> filter(!is.na(temp))
+  summarize(temp = median(temp, na.rm=TRUE), state = first(STATE)
+  ) |> filter(!is.na(temp)) 
 
 station_median_wind <- met_dt |>
  group_by(USAFID) |>
-  summarize(wind.sp = median(wind.sp, na.rm=TRUE)
+  summarize(wind.sp = median(wind.sp, na.rm=TRUE), state = first(STATE)
   ) |> filter(!is.na(wind.sp))
 
 station_median_atm <- met_dt |>
  group_by(USAFID) |>
-  summarize(atm.press = median(atm.press, na.rm=TRUE)
+  summarize(atm.press = median(atm.press, na.rm=TRUE), state = first(STATE)
   ) |> filter(!is.na(atm.press))
 
 stations_temp <-station_median_temp[station_median_temp$temp==state_median_temp, "USAFID"]
@@ -199,7 +199,11 @@ Knit the document, commit your changes, and save it on GitHub. Don't forget to a
 Now let's find the weather stations by state with closest temperature and wind speed based on the euclidean distance from these medians. 
 
 ```{r}
-
+station_median_temp$distance = sqrt((station_median_temp$temp - state_median_temp)^2 + (station_median_wind$wind.sp - state_median_wind)^2)
+closest <- station_median_temp %>% 
+   group_by(state) %>% 
+   filter(distance == min(distance)) %>%
+  select(USAFID, state, distance)
 ```
 
 Knit the doc and save it on GitHub.
