@@ -131,12 +131,28 @@ stations[, n := 1:.N, by = .(USAF)]
 stations <- stations[n == 1,][, n := NULL]
 
 # Read in the met data and fix lat, lon, temp
+met$lat <- met$lat/1000
+met$lon <- met$lon/1000
+met$wind.sp <- met$wind.sp/10
+met$temp <- met$temp/10
+met$dew.point <- met$dew.point/10
+met$atm.press <- met$atm.press/10
 ```
 
 3. Merge the data as we did during the lecture. Use the `merge()` code and you can also try the tidy way with `left_join()`
 
 ```{r}
-
+met_dt <- merge(
+# Data
+ x = met,
+ y = stations,
+# List of variables to match
+ by.x = "USAFID",
+ by.y = "USAF",
+# Which obs to keep?
+ all.x = TRUE,
+ all.y = FALSE
+ )
 ```
 
 ## Question 1: Identifying Representative Stations
@@ -144,13 +160,36 @@ stations <- stations[n == 1,][, n := NULL]
 Across all weather stations, which stations have the median values of temperature, wind speed, and atmospheric pressure? Using the `quantile()` function, identify these three stations. Do they coincide?
 
 ```{r}
-
+state_median_temp = quantile(met_dt$temp, 0.5, na.rm=TRUE)
+state_median_wind = quantile(met_dt$wind.sp, 0.5, na.rm=TRUE)
+state_median_atm = quantile(met_dt$atm.press, 0.5, na.rm=TRUE)
 ```
 
 Next identify the stations have these median values.
 
 ```{r}
+library(tidyverse)
+station_median_temp <- met_dt |>
+ group_by(USAFID) |>
+  summarize(temp = median(temp, na.rm=TRUE)
+  ) |> filter(!is.na(temp))
 
+station_median_wind <- met_dt |>
+ group_by(USAFID) |>
+  summarize(wind.sp = median(wind.sp, na.rm=TRUE)
+  ) |> filter(!is.na(wind.sp))
+
+station_median_atm <- met_dt |>
+ group_by(USAFID) |>
+  summarize(atm.press = median(atm.press, na.rm=TRUE)
+  ) |> filter(!is.na(atm.press))
+
+stations_temp <-station_median_temp[station_median_temp$temp==state_median_temp, "USAFID"]
+stations_wind <- station_median_wind[station_median_wind$wind.sp==state_median_wind,"USAFID"]
+stations_atm <- station_median_atm[station_median_atm$atm.press==state_median_atm,"USAFID"]
+
+temp = intersect(stations_temp, stations_wind)
+intersect(temp, stations_atm)
 ```
 
 Knit the document, commit your changes, and save it on GitHub. Don't forget to add `README.md` to the tree, the first time you render it.
