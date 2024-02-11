@@ -280,8 +280,26 @@ Let's practice running regression models with smooth functions on X. We need the
 - fit both a linear model and a spline model (use `gam()` with a cubic regression spline on wind speed). Summarize and plot the results from the models and interpret which model is the best fit and why.
 
 ```{r}
+temp_atm = left_join(station_median_temp, station_median_atm, by = join_by(USAFID, STATE, LAT, LON)) %>% filter(!is.na(atm.press)) %>% 
+  filter(atm.press <=1020 & 1000 <= atm.press) %>% select(temp, atm.press)
+lazy_temp_atm <- lazy_dt(temp_atm)
 
+correlation<- cor(temp_atm$temp, temp_atm$atm.press, use = "complete.obs")
+print(correlation)
+
+ggplot(temp_atm, aes(x = atm.press, y = temp)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, color = "blue") +
+  geom_smooth(se = FALSE, color = "red") 
+
+m1 <- lm(temp ~ atm.press, data = temp_atm)
+m2 <- gam(temp ~ s(atm.press, bs = "cr"), data = temp_atm)
+pred <- predict.gam(m2, temp_atm)
+plot(pred, type='l')
+summary(m1)
+summary(m2)
 ```
+The linear regression model has a R-squared value of around 0.26. The spline model has a deviance explained value of 0.30.Comparing the two values indicate that the spline model seems to be a better fit since the model is able to explain more of the variance in the dependent variable using the independent variable.
 
 ## Deliverables
 

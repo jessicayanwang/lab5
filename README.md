@@ -445,6 +445,93 @@ need the `mgcv` package and `gam()` function to do this.
   regression spline on wind speed). Summarize and plot the results from
   the models and interpret which model is the best fit and why.
 
+``` r
+temp_atm = left_join(station_median_temp, station_median_atm, by = join_by(USAFID, STATE, LAT, LON)) %>% filter(!is.na(atm.press)) %>% 
+  filter(atm.press <=1020 & 1000 <= atm.press) %>% select(temp, atm.press)
+lazy_temp_atm <- lazy_dt(temp_atm)
+
+correlation<- cor(temp_atm$temp, temp_atm$atm.press, use = "complete.obs")
+print(correlation)
+```
+
+    ## [1] -0.514259
+
+``` r
+ggplot(temp_atm, aes(x = atm.press, y = temp)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, color = "blue") +
+  geom_smooth(se = FALSE, color = "red") 
+```
+
+    ## `geom_smooth()` using formula = 'y ~ x'
+    ## `geom_smooth()` using method = 'gam' and formula = 'y ~ s(x, bs = "cs")'
+
+![](README_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
+
+``` r
+m1 <- lm(temp ~ atm.press, data = temp_atm)
+m2 <- gam(temp ~ s(atm.press, bs = "cr"), data = temp_atm)
+pred <- predict.gam(m2, temp_atm)
+plot(pred, type='l')
+```
+
+![](README_files/figure-gfm/unnamed-chunk-11-2.png)<!-- -->
+
+``` r
+summary(m1)
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = temp ~ atm.press, data = temp_atm)
+    ## 
+    ## Residuals:
+    ##      Min       1Q   Median       3Q      Max 
+    ## -14.3696  -2.6173   0.1844   2.3012  11.6394 
+    ## 
+    ## Coefficients:
+    ##               Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept) 1175.93898   58.53149   20.09   <2e-16 ***
+    ## atm.press     -1.14162    0.05785  -19.73   <2e-16 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 3.762 on 1083 degrees of freedom
+    ## Multiple R-squared:  0.2645, Adjusted R-squared:  0.2638 
+    ## F-statistic: 389.4 on 1 and 1083 DF,  p-value: < 2.2e-16
+
+``` r
+summary(m2)
+```
+
+    ## 
+    ## Family: gaussian 
+    ## Link function: identity 
+    ## 
+    ## Formula:
+    ## temp ~ s(atm.press, bs = "cr")
+    ## 
+    ## Parametric coefficients:
+    ##             Estimate Std. Error t value Pr(>|t|)    
+    ## (Intercept)  20.9378     0.1117   187.5   <2e-16 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Approximate significance of smooth terms:
+    ##               edf Ref.df     F p-value    
+    ## s(atm.press) 8.67  8.968 51.52  <2e-16 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## R-sq.(adj) =  0.297   Deviance explained = 30.2%
+    ## GCV = 13.647  Scale est. = 13.526    n = 1085
+
+The linear regression model has a R-squared value of around 0.26. The
+spline model has a deviance explained value of 0.30.Comparing the two
+values indicate that the spline model seems to be a better fit since the
+model is able to explain more of the variance in the dependent variable
+using the independent variable.
+
 ## Deliverables
 
 - .Rmd file (this file)
